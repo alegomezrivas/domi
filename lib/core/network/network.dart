@@ -9,7 +9,7 @@ class NetworkService {
   static String? token = "";
   static String? refreshToken = "";
 
-  // static const BASE_URL = "http://192.168.1.11:8000/api/v1/";
+  // static const BASE_URL = "http://62.151.183.194:5151/api/v1/";
   // static const WS_URL = "ws://192.168.1.11:8000/";
 
   // static const BASE_URL = "http://134.209.36.121:8989/api/v1/";

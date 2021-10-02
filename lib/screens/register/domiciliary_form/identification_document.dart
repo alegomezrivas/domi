@@ -28,6 +28,7 @@ class _IdentificationDocumentState extends State<IdentificationDocument> {
   ValueNotifier<bool> _frontLoading = ValueNotifier<bool>(false);
   ValueNotifier<bool> _backLoading = ValueNotifier<bool>(false);
   bool showRequired = false;
+  int? _selectedId;
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _IdentificationDocumentState extends State<IdentificationDocument> {
     _dateTime = register.expeditionDate;
     frontKey = register.docFront;
     backKey = register.docBack;
+    _selectedId = register.selectId ?? 1;
     super.initState();
   }
 
@@ -65,10 +67,62 @@ class _IdentificationDocumentState extends State<IdentificationDocument> {
                       SizedBox(
                         height: 25,
                       ),
+                      Container(
+                        width: double.maxFinite,
+                        height: 44,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(9)),
+                        child: DropdownButtonFormField<int>(
+                          value: _selectedId,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.only(left: 16)),
+                          hint: Text(
+                            "Tipo de Identificación",
+                            style:
+                                TextStyle(color: inDomiGreyBlack, fontSize: 14),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              child: Text(
+                                "Cédula",
+                                style: TextStyle(
+                                    color: inDomiGreyBlack, fontSize: 14),
+                              ),
+                              value: 1,
+                            ),
+                            DropdownMenuItem(
+                              child: Text(
+                                "Cédula de extranjería",
+                                style: TextStyle(
+                                    color: inDomiGreyBlack, fontSize: 14),
+                              ),
+                              value: 2,
+                            ),
+                            DropdownMenuItem(
+                              child: Text(
+                                "PEP",
+                                style: TextStyle(
+                                    color: inDomiGreyBlack, fontSize: 14),
+                              ),
+                              value: 3,
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedId = value!;
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
                       IndomiTextFormField(
                         hintText: "Número de documento",
                         radius: 9,
-                        maxLength: 10,
+                        maxLength: 20,
                         width: double.maxFinite,
                         controller: _numberID,
                         edgeInsetsGeometry: EdgeInsets.only(left: 16),
@@ -182,16 +236,15 @@ class _IdentificationDocumentState extends State<IdentificationDocument> {
     if (!_formState.currentState!.validate() ||
         frontKey == null ||
         backKey == null ||
-        _dateTime == null) {
+        _dateTime == null ||
+        _selectedId == null) {
       setState(() {
         showRequired = true;
       });
       return;
     }
-
-    context
-        .read(registerProvider.notifier)
-        .setIdentificationData(_numberID.text, _dateTime!, frontKey!, backKey!);
+    context.read(registerProvider.notifier).setIdentificationData(
+        _selectedId!, _numberID.text, _dateTime!, frontKey!, backKey!);
     Navigator.of(context).pop(1);
   }
 }

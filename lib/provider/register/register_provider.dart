@@ -17,7 +17,7 @@ class RegisterNotifier extends StateNotifier<Register> {
     state = state;
   }
 
-  void restart(){
+  void restart() {
     state = Register();
   }
 
@@ -68,7 +68,7 @@ class RegisterNotifier extends StateNotifier<Register> {
       data["city"] = state.selectedCity!.id;
 
       if (state.docNumber != null) {
-        data["domi_data"] = getDomiData();
+        data["domi_data"] = state.selectType == 1 ? getDomiDataBike() : getDomiData();
       }
       return await repository.registerUser(data);
     } catch (e) {
@@ -77,9 +77,9 @@ class RegisterNotifier extends StateNotifier<Register> {
   }
 
   Future<userData.User> convertUserToDomi() async {
+    final data = state.selectType == 1 ? getDomiDataBike() : getDomiData();
     try {
-      return userData.User.fromJson(
-          await repository.convertToDomi(getDomiData()));
+      return userData.User.fromJson(await repository.convertToDomi(data));
     } catch (e) {
       return Future.error(e);
     }
@@ -92,7 +92,8 @@ class RegisterNotifier extends StateNotifier<Register> {
     data["birthday"] =
         "${state.birthday!.year}-${state.birthday!.month}-${state.birthday!.day}";
     data["email"] = state.email == "" ? null : state.email;
-
+    // Add this field to endpoint in backend for know type of ID  Document
+    data["ident_type"] = state.selectId;
     data["doc_number"] = state.docNumber;
     data["exp_date"] =
         "${state.expeditionDate!.year}-${state.expeditionDate!.month}-${state.expeditionDate!.day}";
@@ -122,6 +123,28 @@ class RegisterNotifier extends StateNotifier<Register> {
     return data;
   }
 
+  Map<String, dynamic> getDomiDataBike() {
+    final Map<String, dynamic> data = {};
+    data["photo"] = state.photo;
+    data["refer_code"] = state.referCode;
+    data["birthday"] =
+        "${state.birthday!.year}-${state.birthday!.month}-${state.birthday!.day}";
+    data["email"] = state.email == "" ? null : state.email;
+    // Add this field to endpoint in backend for know type of ID  Document
+    data["ident_type"] = state.selectId;
+    data["doc_number"] = state.docNumber;
+    data["exp_date"] =
+        "${state.expeditionDate!.year}-${state.expeditionDate!.month}-${state.expeditionDate!.day}";
+    data["doc_front"] = state.docFront;
+    data["doc_back"] = state.docBack;
+
+    data["pic_with_license"] = state.frontPhotoId;
+
+    data["vehicle_type"] = state.selectType;
+
+    return data;
+  }
+
   void setAboutMeData(String firstName, String lastName, String photo,
       String photoPath, String email, DateTime birthday) {
     state.firstName = firstName;
@@ -133,8 +156,9 @@ class RegisterNotifier extends StateNotifier<Register> {
     state = state;
   }
 
-  void setIdentificationData(
-      String docNumber, DateTime expeditionDate, String front, String back) {
+  void setIdentificationData(int selectId, String docNumber,
+      DateTime expeditionDate, String front, String back) {
+    state.selectId = selectId;
     state.docNumber = docNumber;
     state.expeditionDate = expeditionDate;
     state.docFront = front;
@@ -161,6 +185,11 @@ class RegisterNotifier extends StateNotifier<Register> {
     state.selectType = type;
     state.plateNumber = plateVehicle;
     state.vehicleFront = front;
+    state = state;
+  }
+
+  void setAboutVehicleBike(int type) {
+    state.selectType = type;
     state = state;
   }
 
@@ -207,6 +236,17 @@ class RegisterNotifier extends StateNotifier<Register> {
     state.lastName = user.lastName;
     state.email = user.email;
   }
+
+  /// [Validator]
+  /// Checks if selectType is = 1. If true, it skips some fields in its validation.
+  ///  In any other case, validate that the information is correct
+  bool validator() {
+    if (state.selectType != null && state.selectType == 1) {
+      return state.validateBike();
+    } else {
+      return state.validateAll();
+    }
+  }
 }
 
 class Register {
@@ -226,6 +266,7 @@ class Register {
   DateTime? birthday;
 
   /// identification Data
+  int? selectId;
   String? docNumber;
   DateTime? expeditionDate;
   String? docFront;
@@ -266,7 +307,8 @@ class Register {
   }
 
   bool validateIdentification() {
-    return docNumber != null &&
+    return selectId != null &&
+        docNumber != null &&
         expeditionDate != null &&
         docFront != null &&
         docBack != null;
@@ -291,6 +333,10 @@ class Register {
         validatePropertyCard();
   }
 
+  bool validateAboutVehicleBike() {
+    return selectType != null && selectType == 1;
+  }
+
   bool validateSoat() {
     return expeditionSoat != null && expireSoat != null && soatFront != null;
   }
@@ -303,13 +349,15 @@ class Register {
     return referCode != null;
   }
 
+  bool validateBike() {
+    return validateAboutMe() && validateIdentification() && validatePhotoID();
+  }
+
   bool validateAll() {
     return validateAboutMe() &&
         validateIdentification() &&
         validatePhotoID() &&
         validateDriverLicense() &&
-        validateAboutVehicle() &&
-        validateSoat() &&
-        validatePropertyCard();
+        validateAboutVehicle();
   }
 }

@@ -24,6 +24,13 @@ class DomiciliaryFormPage extends StatefulWidget {
 
 class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
   final ValueNotifier<bool> _loading = ValueNotifier<bool>(false);
+  bool _isValidated = false;
+
+  @override
+  void initState() { 
+    super.initState();
+    _isValidated = context.read(registerProvider.notifier).validator();
+  }
 
   @override
   void dispose() {
@@ -51,10 +58,9 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
                         children: [
                           ButtonDomiForm(
                             text: "Acerca de mi",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => AboutMe(),
-                              ));
+                            voidCallback: () async {
+                              await _navigateAndDisplaySelection(
+                                  context, AboutMe());
                             },
                             valid: watch(registerProvider).validateAboutMe(),
                           ),
@@ -63,10 +69,9 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
                           ),
                           ButtonDomiForm(
                             text: "Documento de ID",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => IdentificationDocument(),
-                              ));
+                            voidCallback: () async {
+                              await _navigateAndDisplaySelection(
+                                  context, IdentificationDocument());
                             },
                             valid: watch(registerProvider)
                                 .validateIdentification(),
@@ -76,10 +81,9 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
                           ),
                           ButtonDomiForm(
                             text: "Confirmación de ID",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => ConfirmationId(),
-                              ));
+                            voidCallback: () async {
+                              await _navigateAndDisplaySelection(
+                                  context, ConfirmationId());
                             },
                             valid: watch(registerProvider).validatePhotoID(),
                           ),
@@ -87,37 +91,43 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
                             height: 14,
                           ),
                           ButtonDomiForm(
-                            text: "Licencia de conducir",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => DriverLicense(),
-                              ));
-                            },
-                            valid:
-                                watch(registerProvider).validateDriverLicense(),
-                          ),
-                          SizedBox(
-                            height: 14,
-                          ),
-                          ButtonDomiForm(
                             text: "Información del vehículo",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => AboutVehicle(),
-                              ));
+                            voidCallback: () async {
+                              await _navigateAndDisplaySelection(
+                                  context, AboutVehicle());
                             },
-                            valid:
-                                watch(registerProvider).validateAboutVehicle(),
+                            valid: watch(registerProvider).selectType == 1
+                                ? watch(registerProvider)
+                                    .validateAboutVehicleBike()
+                                : watch(registerProvider)
+                                    .validateAboutVehicle(),
                           ),
                           SizedBox(
                             height: 14,
+                          ),
+                          Visibility(
+                            visible: watch(registerProvider).selectType != 1,
+                            child: ButtonDomiForm(
+                              text: "Licencia de conducir",
+                              voidCallback: () async {
+                                await _navigateAndDisplaySelection(
+                                    context, DriverLicense());
+                              },
+                              valid:
+                                  watch(registerProvider).validateDriverLicense(),
+                              ),
+                          ),
+                          Visibility(
+                            visible: watch(registerProvider).selectType != 1,
+                            child: SizedBox(
+                              height: 14,
+                            ),
                           ),
                           ButtonDomiForm(
                             text: "Código referido (opcional)",
-                            voidCallback: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => ReferredCode(),
-                              ));
+                            voidCallback: () async {
+                              await _navigateAndDisplaySelection(
+                                  context, ReferredCode());
                             },
                             valid: watch(registerProvider).validateReferCode(),
                           ),
@@ -127,19 +137,14 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
                           ValueListenableBuilder<bool>(
                               valueListenable: _loading,
                               builder: (context, value, child) {
-                                print(watch(registerProvider).validateAll());
                                 return DomiContinueButton(
                                   text: "Enviar datos",
-                                  disabled:
-                                      !(watch(registerProvider).validateAll() &&
-                                          !value),
-                                  voidCallback:
-                                      watch(registerProvider).validateAll() &&
-                                              !value
-                                          ? watch(registerProvider).covertToDomi
-                                              ? _convertToDomi
-                                              : _registerDomi
-                                          : null,
+                                  disabled: !(_isValidated && !value),
+                                  voidCallback: _isValidated && !value
+                                      ? watch(registerProvider).covertToDomi
+                                          ? _convertToDomi
+                                          : _registerDomi
+                                      : null,
                                 );
                               })
                         ],
@@ -186,13 +191,27 @@ class _DomiciliaryFormPageState extends State<DomiciliaryFormPage> {
       print(response);
       await context.read(authProvider).setUser(response);
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => DomiHomePage(),
-          ),
-              (route) => false);
+        MaterialPageRoute(builder: (context) => DomiHomePage()),
+        (route) => false,
+      );
     } catch (e) {
       showError(context, e);
     }
     _loading.value = false;
+  }
+
+  Future<void> _navigateAndDisplaySelection(
+      BuildContext context, Widget widget) async {
+    // Navigator.push returns a Future that completes after calling
+    // Navigator.pop on the Selection Screen.
+    final result = await Navigator.of(context).push(
+      // Create the SelectionScreen in the next step.
+      MaterialPageRoute(builder: (context) => widget),
+    );
+    if (result != null && result == 1) {
+      setState(() {
+        _isValidated = context.read(registerProvider.notifier).validator();
+      });
+    }
   }
 }
