@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1089324141491",
+    "project_id": "indomi-522f3",
+    "storage_bucket": "indomi-522f3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089324141491:android:ec3c795a3901ca0cde19c6",
+        "android_client_info": {
+          "package_name": "com.indomi.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1089324141491-fefa0n6f1mejfg3eve4d3a1lk7v84mr8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbnHd0pbnXVWyu2zY9t_JdCBRLpbVzhhc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1089324141491-fefa0n6f1mejfg3eve4d3a1lk7v84mr8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
